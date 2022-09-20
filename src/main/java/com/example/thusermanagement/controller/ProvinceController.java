@@ -1,8 +1,11 @@
 package com.example.thusermanagement.controller;
 
 
+import com.example.thusermanagement.model.Customer;
 import com.example.thusermanagement.model.Province;
+import com.example.thusermanagement.service.imp.CustomerService;
 import com.example.thusermanagement.service.imp.IProvinceService;
+import com.example.thusermanagement.service.imp.ProvinceService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,8 +20,25 @@ import java.util.Optional;
 public class ProvinceController {
 
     @Autowired
-    private IProvinceService provinceService;
+    private ProvinceService provinceService;
 
+    @Autowired
+    private CustomerService customerService;
+
+    @GetMapping("/view-province/{id}")
+    public ModelAndView viewProvince(@PathVariable("id") Long id){
+        Optional<Province> provinceOptional = provinceService.findById(id);
+        if(!provinceOptional.isPresent()){
+            return new ModelAndView("/error.404");
+        }
+
+        Iterable<Customer> customers = customerService.findAllByProvince(provinceOptional.get());
+
+        ModelAndView modelAndView = new ModelAndView("/province/view");
+        modelAndView.addObject("province", provinceOptional.get());
+        modelAndView.addObject("customers", customers);
+        return modelAndView;
+    }
     @GetMapping("/provinces")
     public ModelAndView listProvinces() {
         Iterable<Province> provinces = provinceService.findAll();
@@ -86,5 +106,4 @@ public class ProvinceController {
         provinceService.remove(province.getId());
         return "redirect:provinces";
     }
-
 }
